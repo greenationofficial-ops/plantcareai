@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마이그린 식물케어</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+<style>
+:root {
+  --green:  #003D09;
+  --fresh:  #5FB96B;
+  --mint:   #E8F5E9;
+  --cream:  #F8F6ED;
+  --peach:  #FF8A7A;
+  --black:  #1A1A1A;
+  --gray:   #888;
+  --lgray:  #C8C8C8;
+  --border: #EBEBEB;
+  --gold:   #C9A227;
+  --white:  #FFFFFF;
+  --bg:     #F5F5F5;
+  --red:    #D32F2F;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'Noto Sans KR', sans-serif; background: transparent; margin: 0; padding: 0; }
+
+/* ── 기본: 모바일 ── */
+.wrap { width: 100%; max-width: 420px; height: 780px; display: flex; flex-direction: column; background: var(--white); overflow: hidden; box-shadow: 0 4px 30px rgba(0,61,9,0.15); position: relative; border-radius: 16px; margin: 0 auto; }
+
+/* ── 태블릿 (768px 이상) ── */
+@media (min-width: 768px) {
+  .wrap { max-width: 480px; height: 820px; border-radius: 20px; }
+  .hdr { padding: 18px 24px 14px; }
+  .hdr-title { font-size: 22px; }
+  .chat { padding: 22px 20px 12px; gap: 14px; }
+  .bubble { font-size: 16px; max-width: 78%; }
+  .choice { font-size: 15px; padding: 10px 18px; }
+  .sdot { width: 32px; height: 32px; font-size: 15px; }
+  .slbl { font-size: 13px; }
+  .input-box { font-size: 16px; padding: 13px 18px; }
+  .rx-body { padding: 16px 20px; }
+  .rx-patient { padding: 14px 20px; }
+}
+
+/* ── 데스크탑 (1024px 이상) ── */
+@media (min-width: 1024px) {
+  .wrap { max-width: 560px; height: 860px; border-radius: 24px; box-shadow: 0 12px 60px rgba(0,61,9,0.18); }
+  .hdr { padding: 20px 28px 16px; }
+  .hdr-title { font-size: 24px; }
+  .hdr-sub { font-size: 13px; }
+  .chat { padding: 24px 24px 12px; gap: 16px; }
+  .bubble { font-size: 16px; line-height: 1.7; max-width: 76%; padding: 13px 17px; }
+  .choices { gap: 10px; padding-left: 44px; }
+  .choice { font-size: 15px; padding: 11px 20px; }
+  .sdot { width: 34px; height: 34px; font-size: 16px; }
+  .slbl { font-size: 13px; width: 34px; }
+  .stepbar { padding: 12px 20px 10px; }
+  .input-area { padding: 12px 20px 22px; }
+  .input-box { font-size: 16px; padding: 13px 20px; }
+  .send-btn { width: 48px; height: 48px; }
+  .wiki-card { margin-left: 8px; width: calc(100% - 8px); }
+  .rx-wrap { margin-left: 44px; }
+  .rx-card { border-radius: 6px; }
+  .rx-body { padding: 18px 22px; }
+  .rx-patient { padding: 14px 22px; grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .rx-score-num { font-size: 40px; }
+  .dl-wrap { margin-left: 44px; gap: 12px; }
+  .dl-btn { font-size: 15px; padding: 14px 0; border-radius: 16px; }
+  .tip-wrap { margin-left: 44px; }
+  .level-card { gap: 14px; }
+  .level-btn { padding: 20px 16px; border-radius: 18px; }
+  .level-btn-icon { font-size: 32px; margin-bottom: 10px; }
+  .level-btn-title { font-size: 16px; }
+  .level-btn-desc { font-size: 13px; }
+}
+
+/* ── 헤더 ── */
+.hdr { background: var(--white); padding: 14px 20px 12px; display: flex; align-items: center; border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 10px; }
+.hdr-texts { flex: 1; }
+.hdr-title { font-size: 18px; font-weight: 900; color: var(--black); letter-spacing: -0.5px; font-family: 'Nanum Gothic', sans-serif; font-weight: 800; }
+.hdr-sub   { font-size: 12px; color: var(--gray); margin-top: 1px; }
+.hdr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.hdr-wiki  { font-size: 11px; color: var(--fresh); font-weight: 700; background: var(--mint); border-radius: 8px; padding: 3px 8px; }
+.hdr-level { font-size: 11px; font-weight: 700; border-radius: 8px; padding: 3px 8px; display: none; }
+.hdr-level.beginner { background: #E3F2FD; color: #1565C0; }
+.hdr-level.advanced { background: #F3E5F5; color: #6A1B9A; }
+
+/* ── 스텝바 ── */
+.stepbar { padding: 10px 16px 8px; background: var(--white); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.stepbar-track { display: flex; align-items: center; margin-bottom: 6px; }
+.sdot { width: 30px; height: 30px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--lgray); flex-shrink: 0; transition: all 0.3s; font-weight: 700; }
+.sdot.active { background: var(--green); color: white; box-shadow: 0 3px 10px rgba(0,61,9,0.25); }
+.sdot.done   { background: var(--fresh); color: white; }
+.sline { flex: 1; height: 2px; background: var(--border); transition: background 0.3s; }
+.sline.done { background: var(--fresh); }
+.stepbar-labels { display: flex; justify-content: space-between; padding: 0 1px; }
+.slbl { font-size: 12px; color: var(--lgray); font-weight: 500; text-align: center; width: 30px; transition: color 0.3s; white-space: nowrap; }
+.slbl.active { color: var(--green); font-weight: 700; }
+.slbl.done   { color: var(--fresh); }
+
+/* ── 채팅 ── */
+.chat { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 18px 14px 10px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+.chat::-webkit-scrollbar { width: 0; }
+
+.msg { display: flex; gap: 8px; animation: up 0.22s ease; }
+.msg.user { flex-direction: row-reverse; }
+@keyframes up { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
+
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--mint); border: 1.5px solid #c8e6c9; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; align-self: flex-end; }
+.bubble { max-width: 76%; padding: 11px 14px; border-radius: 18px; font-size: 15px; line-height: 1.65; color: var(--black); }
+.msg.bot  .bubble { background: var(--bg); border-bottom-left-radius: 4px; }
+.msg.user .bubble { background: var(--green); color: white; border-bottom-right-radius: 4px; font-weight: 500; }
+
+/* ── 레벨 선택 카드 ── */
+.level-card {
+  margin-left: 40px;
+  display: flex;
+  gap: 10px;
+  animation: up 0.3s ease;
+}
+.level-btn {
+  flex: 1;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--white);
+  transition: all 0.2s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.level-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.1); }
+.level-btn.beginner { border-color: #90CAF9; }
+.level-btn.beginner:hover { border-color: #1565C0; background: #E3F2FD; }
+.level-btn.advanced { border-color: #CE93D8; }
+.level-btn.advanced:hover { border-color: #6A1B9A; background: #F3E5F5; }
+.level-btn-icon { font-size: 28px; margin-bottom: 8px; }
+.level-btn-title { font-size: 15px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
+.level-btn-desc { font-size: 12px; color: var(--gray); line-height: 1.4; }
+
+/* ── 선택 버튼 ── */
+.choices { display: flex; flex-wrap: wrap; gap: 8px; padding-left: 40px; animation: up 0.3s ease 0.04s both; }
+.choice { background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; padding: 9px 15px; font-size: 14px; font-weight: 500; color: var(--black); cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: all 0.16s; line-height: 1; }
+.choice:hover { border-color: var(--fresh); color: var(--green); background: var(--mint); }
+.choice.sel   { background: var(--green); border-color: var(--green); color: white; }
+.choice:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── 심화 질문 유도 버튼 ── */
+.deep-prompt {
+  margin-left: 40px;
+  animation: up 0.3s ease;
+}
+.deep-btn {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--white);
+  border: 1.5px dashed var(--gold);
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  width: 100%;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.2s;
+}
+.deep-btn:hover { background: #FFF8E1; border-color: #F9A825; }
+.deep-btn-icon  { font-size: 20px; flex-shrink: 0; }
+.deep-btn-text  { text-align: left; }
+.deep-btn-title { font-size: 13px; font-weight: 700; color: var(--black); }
+.deep-btn-sub   { font-size: 11px; color: var(--gray); margin-top: 2px; }
+
+.deep-skip { text-align: center; margin-top: 6px; }
+.deep-skip-btn { background: none; border: none; color: var(--lgray); font-size: 12px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
+
+/* ── Wiki 카드 ── */
+.wiki-card { margin: 0 0 0 0; background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; animation: up 0.3s ease; box-shadow: 0 2px 10px rgba(0,0,0,0.06); width: 100%; }
+.wiki-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; flex-shrink: 0; }
+.wiki-thumb-placeholder { width: 80px; height: 80px; background: var(--mint); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; }
+.wiki-top  { background: linear-gradient(135deg, var(--green) 0%, #1a7a2a 100%); padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+.wiki-emoji { font-size: 28px; }
+.wiki-name  { color: white; font-size: 18px; font-weight: 700; }
+.wiki-sci   { color: rgba(255,255,255,0.65); font-size: 11px; margin-top: 2px; font-style: italic; }
+.wiki-body  { padding: 14px 16px; }
+.wiki-tags  { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+.wiki-tag   { background: var(--mint); color: var(--green); border-radius: 10px; padding: 3px 9px; font-size: 11px; font-weight: 600; }
+.wiki-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.wiki-stat  { background: var(--bg); border-radius: 10px; padding: 10px 8px; text-align: center; }
+.wiki-stat-ico { font-size: 14px; margin-bottom: 3px; }
+.wiki-stat-val { font-size: 13px; font-weight: 700; color: var(--black); }
+.wiki-stat-key { font-size: 10px; color: var(--gray); margin-top: 1px; }
+.wiki-tip   { margin-top: 10px; background: var(--mint); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--green); font-weight: 500; line-height: 1.6; }
+
+/* ── 섹션 배지 ── */
+.sec-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--green); color: white; border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 700; margin-bottom: 6px; }
+.sec-badge.adv { background: #6A1B9A; }
+
+/* ── 타이핑 ── */
+.typing { display: flex; align-items: center; gap: 8px; padding-left: 40px; }
+.typing-dots { background: var(--bg); border-radius: 18px; padding: 10px 14px; display: flex; gap: 5px; align-items: center; }
+.typing-dots span { width: 7px; height: 7px; background: var(--lgray); border-radius: 50%; animation: bounce 1.1s infinite; }
+.typing-dots span:nth-child(2) { animation-delay: 0.18s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.36s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:0.5;} 30%{transform:translateY(-5px);opacity:1;} }
+
+/* ── 식물케어 리포트 ── */
+.rx-wrap { margin-left: 40px; animation: up 0.4s ease; }
+.rx-card { background: var(--white); border: 2px solid var(--black); border-radius: 4px; overflow: hidden; box-shadow: 4px 4px 0 rgba(0,0,0,0.15); font-family: 'Nanum Myeongjo', serif; }
+.rx-header { background: var(--green); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; }
+.rx-header-left { display: flex; align-items: center; gap: 10px; }
+.rx-cross { width: 28px; height: 28px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+.rx-title    { color: white; font-size: 16px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; letter-spacing: 1px; }
+.rx-subtitle { color: rgba(255,255,255,0.75); font-size: 11px; font-family: 'Noto Sans KR', sans-serif; margin-top: 2px; }
+.rx-no { color: rgba(255,255,255,0.6); font-size: 11px; font-family: 'Noto Sans KR', sans-serif; }
+.rx-level-badge { padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; }
+.rx-level-badge.beginner { background: #E3F2FD; color: #1565C0; }
+.rx-level-badge.advanced { background: #F3E5F5; color: #6A1B9A; }
+.rx-patient { padding: 12px 18px; border-bottom: 1px dashed #ccc; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #fafafa; }
+.rx-field { display: flex; flex-direction: column; gap: 2px; }
+.rx-field-label { font-size: 10px; color: var(--gray); font-family: 'Noto Sans KR', sans-serif; font-weight: 500; }
+.rx-field-value { font-size: 14px; font-weight: 700; color: var(--black); font-family: 'Noto Sans KR', sans-serif; }
+.rx-body { padding: 14px 18px; }
+.rx-section-title { font-size: 11px; font-weight: 700; color: var(--gray); font-family: 'Noto Sans KR', sans-serif; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 5px; }
+.rx-diagnosis { margin-bottom: 14px; }
+.rx-diag-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px dotted #eee; }
+.rx-diag-row:last-child { border-bottom: none; }
+.rx-diag-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.dot-red  { background: var(--peach); }
+.dot-gold { background: var(--gold); }
+.dot-grn  { background: var(--fresh); }
+.rx-diag-main { font-size: 14px; font-weight: 700; color: var(--black); font-family: 'Noto Sans KR', sans-serif; }
+.rx-diag-sub  { font-size: 12px; color: var(--gray); font-family: 'Noto Sans KR', sans-serif; margin-top: 2px; line-height: 1.4; }
+.rx-badge-red  { display: inline-block; background: #fde8e8; color: var(--red); border-radius: 4px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-left: 5px; font-family: 'Noto Sans KR', sans-serif; }
+.rx-badge-gold { display: inline-block; background: #fff8e1; color: var(--gold); border-radius: 4px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-left: 5px; font-family: 'Noto Sans KR', sans-serif; }
+.rx-badge-grn  { display: inline-block; background: var(--mint); color: var(--green); border-radius: 4px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-left: 5px; font-family: 'Noto Sans KR', sans-serif; }
+.rx-score { display: flex; align-items: center; gap: 12px; background: var(--bg); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; }
+.rx-score-num { font-size: 36px; font-weight: 900; color: var(--green); font-family: 'Noto Sans KR', sans-serif; line-height: 1; }
+.rx-score-status { font-size: 15px; font-weight: 700; color: var(--black); font-family: 'Noto Sans KR', sans-serif; margin-top: 2px; }
+.rx-score-bar-bg { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.rx-score-bar { height: 100%; background: linear-gradient(90deg, var(--green), var(--fresh)); border-radius: 4px; transition: width 1s ease; }
+.rx-prescription { margin-bottom: 14px; }
+.rx-presc-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 10px; border-radius: 8px; background: var(--mint); margin-bottom: 6px; }
+.rx-presc-num { font-size: 14px; font-weight: 900; color: var(--green); flex-shrink: 0; font-family: 'Noto Sans KR', sans-serif; }
+.rx-presc-txt { font-size: 13px; color: var(--black); font-family: 'Noto Sans KR', sans-serif; line-height: 1.5; }
+.rx-footer { padding: 10px 18px 14px; border-top: 1px dashed #ccc; display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
+.rx-footer-left { font-size: 11px; color: var(--gray); font-family: 'Noto Sans KR', sans-serif; }
+.rx-footer-sign-name { font-size: 14px; font-weight: 700; color: var(--green); font-family: 'Nanum Myeongjo', serif; }
+.rx-footer-sign-date { font-size: 10px; color: var(--lgray); font-family: 'Noto Sans KR', sans-serif; margin-top: 2px; }
+.rx-stamp { width: 44px; height: 44px; border: 2px solid var(--red); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--red); font-size: 10px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; text-align: center; line-height: 1.2; transform: rotate(-15deg); flex-shrink: 0; }
+
+/* ── 제보 ── */
+.tip-wrap { margin-left: 40px; animation: up 0.3s ease; }
+.tip-trigger { background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; padding: 13px 15px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.tip-trigger:hover { border-color: var(--fresh); }
+.tip-trigger-icon { font-size: 22px; flex-shrink: 0; }
+.tip-trigger-main { font-size: 14px; font-weight: 700; color: var(--black); margin-bottom: 2px; }
+.tip-trigger-sub  { font-size: 12px; color: var(--gray); }
+
+.tip-panel { background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; display: none; margin-top: 8px; }
+.tip-panel.open { display: block; animation: up 0.25s ease; }
+.tip-panel-hdr { background: var(--green); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; }
+.tip-panel-title { color: white; font-size: 14px; font-weight: 700; }
+.tip-panel-close { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; font-family: 'Noto Sans KR', sans-serif; }
+.tip-body { padding: 14px; }
+.tip-label { font-size: 12px; font-weight: 700; color: var(--black); margin-bottom: 8px; }
+.tip-cats { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+.tip-cat { background: var(--bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 7px 13px; font-size: 13px; font-weight: 500; color: var(--gray); cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: all 0.16s; line-height: 1; }
+.tip-cat:hover { border-color: var(--fresh); color: var(--green); }
+.tip-cat.on { background: var(--green); border-color: var(--green); color: white; font-weight: 700; }
+.tip-textarea { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; padding: 11px 14px; font-size: 14px; font-family: 'Noto Sans KR', sans-serif; color: var(--black); resize: none; outline: none; min-height: 80px; margin-bottom: 12px; transition: border-color 0.2s; line-height: 1.6; }
+.tip-textarea:focus { border-color: var(--fresh); background: white; }
+.tip-textarea::placeholder { color: var(--lgray); font-size: 13px; }
+.tip-submit { width: 100%; background: var(--green); color: white; border: none; border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; transition: all 0.2s; }
+.tip-submit:hover { background: var(--fresh); }
+.tip-submit:disabled { background: var(--border); color: var(--lgray); cursor: not-allowed; }
+.tip-note { font-size: 11px; color: var(--lgray); text-align: center; margin-top: 8px; }
+.tip-done { text-align: center; padding: 22px 16px; display: none; }
+.tip-done.show { display: block; animation: up 0.3s ease; }
+.tip-done-ico { font-size: 38px; margin-bottom: 8px; }
+.tip-done-ttl { font-size: 15px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
+.tip-done-txt { font-size: 13px; color: var(--gray); line-height: 1.6; }
+
+/* ── 다운로드 버튼 ── */
+.dl-wrap {
+  margin-left: 40px;
+  display: flex;
+  gap: 8px;
+  animation: up 0.3s ease;
+  margin-top: 4px;
+}
+.dl-btn {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  border: none; border-radius: 12px; padding: 13px 10px;
+  font-size: 14px; font-weight: 700;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer; transition: all 0.2s;
+}
+.dl-btn.pdf {
+  background: var(--green); color: white;
+}
+.dl-btn.pdf:hover { background: var(--fresh); transform: translateY(-1px); }
+.dl-btn.img {
+  background: var(--bg); color: var(--black);
+  border: 1.5px solid var(--border);
+}
+.dl-btn.img:hover { background: var(--fresh); transform: translateY(-1px); }
+.dl-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+/* 인쇄용 스타일 */
+@media print {
+  body { background: white !important; }
+  .hdr, .stepbar, .input-area, .tip-wrap, .dl-wrap,
+  .msg.bot .avatar, .choices, .deep-prompt, .level-card { display: none !important; }
+  .chat { padding: 0 !important; overflow: visible !important; height: auto !important; }
+  .rx-wrap { margin-left: 0 !important; page-break-inside: avoid; }
+  .rx-card { box-shadow: none !important; border: 2px solid #000 !important; }
+  .wrap { max-height: none !important; box-shadow: none !important; }
+}
+.input-area { padding: 10px 14px max(18px, env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: var(--white); flex-shrink: 0; }
+
+/* ── 다운로드 버튼 ── */
+.dl-wrap { display: flex; gap: 10px; margin-left: 0; animation: up 0.3s ease; padding: 0 2px; }
+.dl-btn {
+  flex: 1; border: none; border-radius: 14px;
+  padding: 13px 0; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.2s; display: flex; align-items: center;
+  justify-content: center; gap: 6px;
+}
+.dl-btn.pdf { background: var(--green); color: white; }
+.dl-btn.pdf:hover { background: #1a5c2a; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,61,9,0.25); }
+.dl-btn.img { background: var(--green); color: white; border: none; }
+.dl-btn.img:hover { background: var(--fresh); transform: translateY(-1px); }
+.dl-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+/* ── 저장 로딩 오버레이 ── */
+.save-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.55); z-index: 999;
+  display: none; align-items: center; justify-content: center;
+}
+.save-overlay.show { display: flex; }
+.save-box {
+  background: white; border-radius: 20px;
+  padding: 30px 36px; text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  animation: up 0.3s ease;
+}
+.save-box-icon { font-size: 40px; margin-bottom: 12px; animation: savebounce 1s infinite; }
+@keyframes savebounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+.save-box-txt { font-size: 15px; font-weight: 700; color: var(--black); margin-bottom: 4px; }
+.save-box-sub { font-size: 12px; color: var(--gray); }
+.input-row  { display: flex; gap: 10px; align-items: center; }
+.input-box  { flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: 24px; padding: 11px 16px; font-size: 16px; font-family: 'Noto Sans KR', sans-serif; color: var(--black); outline: none; transition: border-color 0.2s; }
+.input-box:focus { border-color: var(--fresh); background: white; }
+.input-box::placeholder { color: var(--lgray); }
+.input-box:disabled { opacity: 0.4; }
+.send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--green); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; box-shadow: 0 3px 10px rgba(0,61,9,0.2); }
+.send-btn:hover { background: var(--fresh); transform: scale(1.05); }
+.input-hint { font-size: 11px; color: var(--lgray); text-align: center; margin-top: 6px; }
+</style>
+</head>
+<body>
+<!-- 저장 오버레이 -->
+<div class="save-overlay" id="saveOverlay">
+  <div class="save-box">
+    <div class="save-box-icon" id="saveIcon">📄</div>
+    <div class="save-box-txt" id="saveTxt">저장 중이에요...</div>
+    <div class="save-box-sub" id="saveSub">잠깐만 기다려주세요</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- 헤더 -->
+  <div class="hdr">
+    <div class="hdr-texts">
+      <div class="hdr-title">마이그린</div>
+      <div class="hdr-sub">식물케어</div>
+    </div>
+    <div class="hdr-right">
+      <span class="hdr-wiki">Wiki ✓</span>
+      <span class="hdr-level" id="hdrLevel"></span>
+    </div>
+  </div>
+
+  <!-- 스텝바 -->
+  <div class="stepbar">
+    <div class="stepbar-track">
+      <div class="sdot active" id="sd0">🍀</div>
+      <div class="sline" id="sl0"></div>
+      <div class="sdot" id="sd1">🪨</div>
+      <div class="sline" id="sl1"></div>
+      <div class="sdot" id="sd2">💧</div>
+      <div class="sline" id="sl2"></div>
+      <div class="sdot" id="sd3">💨</div>
+      <div class="sline" id="sl3"></div>
+      <div class="sdot" id="sd4">🌡️</div>
+      <div class="sline" id="sl4"></div>
+      <div class="sdot" id="sd5">☀️</div>
+      <div class="sline" id="sl5"></div>
+      <div class="sdot" id="sd6">📋</div>
+    </div>
+    <div class="stepbar-labels">
+      <span class="slbl active" id="sl_0">식물</span>
+      <span class="slbl" id="sl_1">토양</span>
+      <span class="slbl" id="sl_2">물</span>
+      <span class="slbl" id="sl_3">대기</span>
+      <span class="slbl" id="sl_4">온도</span>
+      <span class="slbl" id="sl_5">광</span>
+      <span class="slbl" id="sl_6">리포트</span>
+    </div>
+  </div>
+
+  <!-- 채팅 -->
+  <div class="chat" id="chat"></div>
+
+  <!-- 입력창 -->
+  <div class="input-area">
+    <div class="input-row">
+      <input class="input-box" id="inp" type="text"
+        placeholder="식물 이름이나 생김새를 입력하세요"
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter'||event.keyCode===13){event.preventDefault();send();return false;}">
+      <button class="send-btn" onclick="vibe(8);send()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2" fill="white" stroke="none"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+<script>
+// ── 상태
+const S = {
+  step: 0,
+  plant: null,
+  level: null,
+  answers: {},
+  deepAnswers: {},
+  score: 0,
+  deepScore: 0
+};
+
+// ── 식물 백과 DB
+const WIKI = {
+  '몬스테라':  { name:'몬스테라',   sci:'Monstera deliciosa',  emoji:'🌿', tags:['관엽식물','열대','반음지'], water:'주 1~2회',      temp:'18~27°C', light:'밝은 간접광',  humidity:'60~80%', ph:'5.5~7.0', tip:'잎에 구멍이 생기려면 충분한 빛이 필요해요' },
+  '선인장':    { name:'선인장',     sci:'Cactaceae',            emoji:'🌵', tags:['다육식물','건조','양지'],   water:'월 1~2회',      temp:'15~35°C', light:'직사광선 가능', humidity:'30~50%', ph:'6.0~7.0', tip:'물을 너무 많이 주면 뿌리가 썩어요' },
+  '고무나무':  { name:'고무나무',   sci:'Ficus elastica',       emoji:'🌳', tags:['관엽식물','열대','반양지'], water:'주 1회',        temp:'16~24°C', light:'밝은 간접광',  humidity:'40~70%', ph:'6.0~7.0', tip:'잎이 떨어지면 온도 변화나 과습을 의심해보세요' },
+  '스킨답서스': { name:'스킨답서스', sci:'Epipremnum aureum',    emoji:'🍃', tags:['공기정화','음지가능'],      water:'주 1회',        temp:'15~30°C', light:'저조도 간접광',humidity:'50~70%', ph:'6.1~6.5', tip:'어두운 환경에서도 잘 자라는 초보자용 식물이에요' },
+  '깻잎':      { name:'깻잎',       sci:'Perilla frutescens',   emoji:'🌱', tags:['식용작물','텃밭'],          water:'겉흙 마르기 전', temp:'20~28°C', light:'직사광 가능',  humidity:'50~70%', ph:'6.0~7.0', tip:'꾸준히 수확할수록 더 잘 자라요' },
+};
+
+// ── 기본 질문 (5개 선택지 통일)
+const QS_BASE = [
+  { step:1, cat:'🪨 토양 상태', subs:[
+    { q:'지금 흙 상태가 어떤가요?', key:'soil_p',
+      ch:['촉촉하고 딱 좋아요','약간 건조한 편이에요','딱딱하고 갈라져요','질퍽하고 무거워요','확인 안 해봤어요'],
+      sc:[10, 6, 2, 1, -3] },
+    { q:'물 줬을 때 배수가 어떤가요?', key:'soil_d',
+      ch:['바로 잘 빠져나가요','천천히 빠져요','거의 안 빠져요','화분 구멍이 없어요','확인 못 해봤어요'],
+      sc:[10, 6, 1, 0, -3] },
+    { q:'흙에서 냄새나거나 벌레 보이나요?', key:'soil_b',
+      ch:['아무것도 없어요','살짝 쿰쿰한 냄새가 나요','쉰내가 심하게 나요','벌레가 보여요','관리 안 하고 있어요'],
+      sc:[5, 3, 0, 0, -5] },
+    { q:'비료나 영양제를 주고 있나요?', key:'soil_c',
+      ch:['최근에 줬어요','한 달 전쯤 줬어요','몇 달 됐어요','한 번도 안 줬어요','뭔지 모르겠어요'],
+      sc:[5, 4, 2, 1, -3] },
+  ]},
+  { step:2, cat:'💧 물 & 습도', subs:[
+    { q:'마지막으로 물 준 게 언제예요?', key:'w_when',
+      ch:['오늘 또는 어제요','3~5일 전이요','1주일 전이요','2주일 이상 됐어요','기억이 안 나요'],
+      sc:[13, 15, 10, 3, -3] },
+    { q:'물을 줄 때 어떻게 주나요?', key:'w_amt',
+      ch:['흠뻑 충분히 줘요','조금씩 자주 줘요','화분 밑으로 흘러나올 때까지요','습기만 줘요','잘 모르겠어요'],
+      sc:[10, 6, 10, 3, -3] },
+    { q:'실내 습도가 어느 정도예요?', key:'humid',
+      ch:['50~70% 정도예요','약간 건조한 편이에요','매우 건조해요','습한 편이에요','잘 모르겠어요'],
+      sc:[10, 6, 2, 7, -3] },
+  ]},
+  { step:3, cat:'💨 대기 환경', subs:[
+    { q:'에어컨·난방 바람이 직접 닿나요?', key:'air_d',
+      ch:['바람이 전혀 없어요','멀리 있어서 괜찮아요','가끔 닿는 것 같아요','직접 닿아요','확인 못 해봤어요'],
+      sc:[10, 8, 5, 1, -2] },
+    { q:'환기는 얼마나 자주 하나요?', key:'air_v',
+      ch:['매일 해요','2~3일에 한 번 해요','가끔 해요','거의 안 해요','관리 안 해요'],
+      sc:[10, 8, 5, 2, -4] },
+  ]},
+  { step:4, cat:'🌡️ 온도', subs:[
+    { q:'지금 실내 온도가 어느 정도예요?', key:'temp',
+      ch:['18~25°C 정도예요','25°C 이상이에요','10~18°C 정도예요','10°C 미만이에요','잘 모르겠어요'],
+      sc:[15, 10, 7, 1, -2] },
+    { q:'낮과 밤 온도 차이가 있나요?', key:'tdiff',
+      ch:['거의 없어요 (2°C 이내)','약간 있어요 (5°C 내외)','좀 있어요 (5~10°C)','많이 달라요 (10°C 이상)','잘 모르겠어요'],
+      sc:[5, 4, 2, 0, -2] },
+  ]},
+  { step:5, cat:'☀️ 빛 환경', subs:[
+    { q:'식물이 어디에 있나요?', key:'l_pos',
+      ch:['창가 바로 옆이에요','창가에서 1~2m예요','방 안쪽이에요','베란다나 야외예요','잘 모르겠어요'],
+      sc:[15, 12, 4, 18, -3] },
+    { q:'하루에 햇빛이 얼마나 들어와요?', key:'l_hr',
+      ch:['6시간 이상이에요','4~6시간 정도예요','2~4시간 정도예요','2시간 미만이에요','잘 모르겠어요'],
+      sc:[20, 15, 8, 2, -3] },
+  ]},
+];
+
+// ── 심화 질문 (중급자 or 더 알고 싶을 때)
+const QS_DEEP = {
+  1: { label:'🪨 토양 심화', subs:[
+    { q:'흙의 종류가 어떻게 되나요?', key:'soil_type',
+      ch:['배합토(시중 흙)','마사토 혼합','원예용 상토','분갈이한 지 1년 이상','잘 모르겠어요'],
+      sc:[3, 5, 3, 1, -2] },
+  ]},
+  2: { label:'💧 물/습도 심화', subs:[
+    { q:'잎에 분무를 하고 있나요?', key:'mist',
+      ch:['매일 해요','2~3일에 한 번 해요','가끔 해요','안 해요','뭔지 모르겠어요'],
+      sc:[3, 3, 2, 1, -2] },
+  ]},
+  3: { label:'💨 대기 심화', subs:[
+    { q:'서큘레이터나 선풍기를 사용하나요?', key:'fan',
+      ch:['항상 틀어요','가끔 틀어요','안 써요','창문을 자주 열어요','잘 모르겠어요'],
+      sc:[3, 2, 1, 3, -2] },
+  ]},
+  4: { label:'🌡️ 온도 심화', subs:[
+    { q:'식물이 창가 가까이 있나요? (겨울 냉기)', key:'cold_window',
+      ch:['창에서 멀리 있어요','약간 있어요','창 바로 앞이에요','베란다예요','잘 모르겠어요'],
+      sc:[3, 2, 1, 2, -1] },
+  ]},
+  5: { label:'☀️ 빛 심화', subs:[
+    { q:'햇빛이 직접 닿나요, 간접광인가요?', key:'l_type',
+      ch:['직사광선이 잘 들어요','커튼 너머 간접광이에요','형광등·LED만 있어요','그늘진 편이에요','잘 모르겠어요'],
+      sc:[5, 4, 2, 1, -2] },
+  ]},
+};
+
+let subIdx = 0, stepData = null, deepMode = false;
+
+const $ = id => document.getElementById(id);
+const C = () => $('chat');
+
+function scroll() { setTimeout(() => C().scrollTop = C().scrollHeight, 80); }
+
+function typing(ms = 800) {
+  return new Promise(r => {
+    const d = document.createElement('div');
+    d.className = 'typing';
+    d.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
+    C().appendChild(d); scroll();
+    setTimeout(() => { d.remove(); r(); }, ms);
+  });
+}
+
+function botMsg(html) {
+  const d = document.createElement('div');
+  d.className = 'msg bot';
+  d.innerHTML = `<div class="avatar">🍀</div><div class="bubble">${html}</div>`;
+  C().appendChild(d); scroll();
+}
+
+function userMsg(t) {
+  const d = document.createElement('div');
+  d.className = 'msg user';
+  d.innerHTML = `<div class="bubble">${t}</div>`;
+  C().appendChild(d); scroll();
+}
+
+// ── 햅틱 진동
+function vibe(ms = 10) {
+  if (navigator.vibrate) navigator.vibrate(ms);
+}
+
+function choices(list, cb) {
+  const d = document.createElement('div');
+  d.className = 'choices'; d.id = 'chs';
+  list.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'choice'; b.textContent = c;
+    b.onclick = () => {
+      vibe(8);
+      document.querySelectorAll('#chs .choice').forEach(x => x.disabled = true);
+      b.classList.add('sel'); d.id = '';
+      cb(c);
+    };
+    d.appendChild(b);
+  });
+  C().appendChild(d); scroll();
+}
+
+function updateStep(active) {
+  for (let i = 0; i <= 6; i++) {
+    const dot = $(`sd${i}`), lbl = $(`sl_${i}`), line = $(`sl${i}`);
+    dot.classList.remove('active','done'); lbl.classList.remove('active','done');
+    if (line) line.classList.remove('done');
+    if (i < active)  { dot.classList.add('done'); lbl.classList.add('done'); if(line) line.classList.add('done'); }
+    if (i === active){ dot.classList.add('active'); lbl.classList.add('active'); }
+  }
+}
+
+// ── 버블 API 설정
+const BUBBLE_API = {
+  url:        'https://mygreen.co.kr/version-live/api/1.1/obj/plant_encyclopedia',
+  requestUrl: 'https://mygreen.co.kr/version-live/api/1.1/obj/plant_request',
+  key: '3ab8d8f7d55d70aec0620f1815ff04e2'  // ← 여기에 새로 발급받은 키 붙여넣기
+};
+
+// ── 식물 추가 요청 저장 (버블 Plant_Request)
+async function saveToPlantRequest(plantName) {
+  try {
+    // 이미 요청된 식물인지 확인
+    const checkConstraints = JSON.stringify([
+      { key: 'plant_name', constraint_type: 'equals', value: plantName }
+    ]);
+    const checkRes = await fetch(
+      `${BUBBLE_API.requestUrl}?constraints=${encodeURIComponent(checkConstraints)}`,
+      { headers: { Authorization: `Bearer ${BUBBLE_API.key}` } }
+    );
+    const checkData = await checkRes.json();
+    const existing = checkData?.response?.results?.[0];
+
+    if (existing) {
+      // 이미 있으면 request_count +1
+      await fetch(`${BUBBLE_API.requestUrl}/${existing._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${BUBBLE_API.key}`
+        },
+        body: JSON.stringify({
+          request_count:  (existing.request_count || 1) + 1,
+          last_requested:  new Date().toISOString()
+        })
+      });
+    } else {
+      // 처음 요청이면 새로 생성
+      await fetch(BUBBLE_API.requestUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${BUBBLE_API.key}`
+        },
+        body: JSON.stringify({
+          plant_name:      plantName,
+          request_count:   1,
+          first_requested: new Date().toISOString(),
+          last_requested:  new Date().toISOString(),
+          status:          '대기중'
+        })
+      });
+    }
+    console.log('Plant_Request 저장 완료:', plantName);
+  } catch(e) {
+    console.error('Plant_Request 저장 오류:', e);
+  }
+}
+
+// ── 식물 검색 (버블 DB)
+async function findPlant(txt) {
+  try {
+    const constraints = JSON.stringify([
+      { key: 'title_text', constraint_type: 'text contains', value: txt }
+    ]);
+    const res = await fetch(
+      `${BUBBLE_API.url}?constraints=${encodeURIComponent(constraints)}`,
+      { headers: { Authorization: `Bearer ${BUBBLE_API.key}` } }
+    );
+    const data = await res.json();
+    console.log('버블 응답 전체:', JSON.stringify(data));
+    const results = data?.response?.results;
+    if (results && results.length > 0) {
+      const r = results[0];
+      return {
+        name:      r.title_text || txt,
+        sci:       r.name_en    || '',
+        emoji:     '🌿',
+        tags:      r.category   ? [r.category] : [],
+        water:     r.plant_water || '-',
+        light:     r.plant_light || '-',
+        humidity:  r.plant_humid || '-',
+        temp:      (r.temp_min && r.temp_max) ? `${r.temp_min}~${r.temp_max}°C` : '-',
+        tip:       r.text        || '',
+        thumbnail: r.thumbnail   || null,
+        status:    r.status      || '',
+        care_level: r.care_level || '',
+      };
+    }
+    return null;
+  } catch(e) {
+    console.error('버블 API 오류:', e);
+    return null;
+  }
+}
+
+// ── 레벨 선택 카드
+function showLevelSelect() {
+  const d = document.createElement('div');
+  d.className = 'level-card';
+  d.innerHTML = `
+    <div class="level-btn beginner" onclick="vibe(8);selectLevel('beginner')">
+      <div class="level-btn-icon">🌱</div>
+      <div class="level-btn-title">식물 초보예요</div>
+      <div class="level-btn-desc">쉽고 간단한<br>질문으로 진단해요</div>
+    </div>
+    <div class="level-btn advanced" onclick="vibe(8);selectLevel('advanced')">
+      <div class="level-btn-icon">🌿</div>
+      <div class="level-btn-title">어느 정도 알아요</div>
+      <div class="level-btn-desc">상세한 질문으로<br>정밀하게 진단해요</div>
+    </div>`;
+  C().appendChild(d); scroll();
+  $('inp').disabled = true;
+}
+
+async function selectLevel(level) {
+  S.level = level;
+  const label = level === 'beginner' ? '🌱 초보' : '🌿 중급';
+  const hdrLvl = $('hdrLevel');
+  hdrLvl.textContent = label;
+  hdrLvl.className = `hdr-level ${level}`;
+  hdrLvl.style.display = 'block';
+
+  userMsg(level === 'beginner' ? '🌱 식물 초보예요' : '🌿 어느 정도 알아요');
+  await typing(600);
+  if (level === 'beginner') {
+    botMsg('알겠어요! 쉬운 질문으로 차근차근 살펴볼게요 🌱<br>걱정 마세요, 버튼만 누르면 돼요!');
+  } else {
+    botMsg('좋아요! 상세한 질문으로 정밀하게 진단해드릴게요 🌿<br>각 단계마다 심화 질문도 있어요!');
+  }
+  await typing(500);
+  S.step = 1; updateStep(1);
+  $('inp').disabled = false;
+  $('inp').placeholder = '버튼으로 선택하거나 직접 입력하세요';
+  
+  startSubs();
+}
+
+// ── 식물 입력 처리
+async function handlePlantInput(txt) {
+  await typing(900);
+  const p = await findPlant(txt);
+
+  if (p) {
+    // 찾은 경우 → 확인 카드 표시
+    botMsg(`식물 백과에서 찾았어요! 🍀<br>이 식물이 맞나요?`);
+    const card = document.createElement('div');
+    card.className = 'wiki-card';
+    const cleanTip = p.tip
+      ? p.tip
+          .replace(/\[h1\]|\[\/h1\]|\[h2\]|\[\/h2\]|\[b\]|\[\/b\]|\[highlight[^\]]*\]|\[\/highlight\]/gi, '')
+          .replace(/<[^>]*>/g, '')
+          .replace(/\n/g, ' ')
+          .trim()
+      : '';
+    const tipShort = cleanTip ? cleanTip.slice(0, 60) + (cleanTip.length > 60 ? '...' : '') : '';
+    card.innerHTML = `
+      <div class="wiki-top">
+        ${p.thumbnail
+          ? `<img class="wiki-thumb" src="${p.thumbnail}" alt="${p.name}" onerror="this.style.display='none'">`
+          : `<div class="wiki-thumb-placeholder">${p.emoji}</div>`}
+        <div style="flex:1;min-width:0;">
+          <div class="wiki-name">${p.name}</div>
+          <div class="wiki-sci">${p.sci}</div>
+        </div>
+        ${p.status ? `<div style="background:rgba(255,255,255,0.2);color:white;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700;font-family:'Noto Sans KR',sans-serif;flex-shrink:0">${p.status}</div>` : ''}
+      </div>
+      <div class="wiki-body">
+        <div class="wiki-tags">
+          ${p.tags.map(t=>`<span class="wiki-tag">${t}</span>`).join('')}
+          ${p.care_level ? `<span class="wiki-tag" style="background:#FFF8E1;color:#C9A227">${p.care_level}</span>` : ''}
+        </div>
+        <div class="wiki-stats">
+          <div class="wiki-stat"><div class="wiki-stat-ico">💧</div><div class="wiki-stat-val">${p.water}</div><div class="wiki-stat-key">물주기</div></div>
+          <div class="wiki-stat"><div class="wiki-stat-ico">🌡️</div><div class="wiki-stat-val">${p.temp}</div><div class="wiki-stat-key">온도</div></div>
+          <div class="wiki-stat"><div class="wiki-stat-ico">☀️</div><div class="wiki-stat-val">${p.light}</div><div class="wiki-stat-key">빛</div></div>
+        </div>
+        <div class="wiki-stats" style="margin-top:8px">
+          <div class="wiki-stat"><div class="wiki-stat-ico">💦</div><div class="wiki-stat-val">${p.humidity}</div><div class="wiki-stat-key">습도</div></div>
+        </div>
+        ${tipShort ? `<div class="wiki-tip">💡 ${tipShort}</div>` : ''}
+      </div>`;
+    // 카드를 독립 div로 감싸서 전체 너비 사용
+    const cardWrap = document.createElement('div');
+    cardWrap.style.cssText = 'width:100%;padding:0 2px;box-sizing:border-box;';
+    cardWrap.appendChild(card);
+    C().appendChild(cardWrap); scroll();
+
+    // 확인 버튼
+    await typing(400);
+    choices(['✅ 맞아요!', '🔄 다시 입력할게요'], async (ans) => {
+      if (ans === '✅ 맞아요!') {
+        userMsg('✅ 맞아요!');
+        S.plant = p;
+        await typing(500);
+        botMsg('좋아요! 먼저 <strong>경험 수준</strong>을 알려주세요.<br>그에 맞게 질문을 드릴게요 🌿');
+        showLevelSelect();
+      } else {
+        userMsg('🔄 다시 입력할게요');
+        await typing(500);
+        botMsg('다시 입력해주세요 🌿<br><small style="color:var(--lgray)">정확한 이름이나 생김새를 알려주시면 찾아드릴게요</small>');
+        $('inp').disabled = false;
+        $('inp').placeholder = '식물 이름을 다시 입력해주세요';
+      }
+    });
+
+  } else {
+    // 못 찾은 경우 → 확인 후 진행
+    botMsg(`식물 백과에서 <strong>"${txt}"</strong>을(를) 찾지 못했어요.<br>혹시 이름이 맞나요?`);
+    await typing(400);
+    choices(['맞아요, 계속 진행할게요', '🔄 다시 입력할게요'], async (ans) => {
+      if (ans === '맞아요, 계속 진행할게요') {
+        userMsg('맞아요, 계속 진행할게요');
+        S.plant = { name:txt, emoji:'🌱', tags:[], water:'-', temp:'-', light:'-', humidity:'-', ph:'-', tip:'', sci:'미상' };
+        // 버블 Plant_Request에 자동 저장
+        saveToPlantRequest(txt);
+        await typing(500);
+        botMsg(`<strong>🌱 "${txt}"</strong>으로 진단을 시작할게요!<br><small style="color:var(--lgray)">만능 기준으로 진단해드려요 · 식물 백과 추가 요청이 접수됐어요 📬</small>`);
+        await typing(400);
+        botMsg('먼저 <strong>경험 수준</strong>을 알려주세요 🌿');
+        showLevelSelect();
+      } else {
+        userMsg('🔄 다시 입력할게요');
+        await typing(500);
+        botMsg('다시 입력해주세요 🌿<br><small style="color:var(--lgray)">예: 몬스테라 / 깻잎 / 로즈마리</small>');
+        $('inp').disabled = false;
+        $('inp').placeholder = '식물 이름을 다시 입력해주세요';
+      }
+    });
+  }
+}
+
+// ── 서브 질문
+function startSubs() {
+  subIdx = 0; deepMode = false;
+  stepData = QS_BASE.find(q => q.step === S.step);
+  askSub();
+}
+
+function askSub() {
+  if (!stepData) return;
+  const sub = stepData.subs[subIdx];
+  if (!sub) {
+    // 기본 질문 완료 → 심화 유도 (중급이거나 버튼 노출)
+    showDeepPrompt();
+    return;
+  }
+  const isFirst = subIdx === 0;
+  const badgeClass = deepMode ? 'sec-badge adv' : 'sec-badge';
+  const badge = isFirst ? `<span class="${badgeClass}">${deepMode ? QS_DEEP[S.step]?.label : stepData.cat}</span><br>` : '';
+  botMsg(`${badge}${sub.q}`);
+  choices(sub.ch, c => { userMsg(c); handleAns(c); });
+}
+
+async function handleAns(ans) {
+  const sub = stepData.subs[subIdx];
+  const idx = sub.ch ? sub.ch.indexOf(ans) : -1;
+  const scoreVal = (sub.sc && idx >= 0) ? sub.sc[idx] : 0;
+  if (deepMode) {
+    S.deepAnswers[sub.key] = ans;
+    S.deepScore = (S.deepScore || 0) + scoreVal;
+  } else {
+    S.answers[sub.key] = ans;
+    S.score = (S.score || 0) + scoreVal;
+  }
+  subIdx++;
+  await typing(400);
+  if (subIdx < stepData.subs.length) askSub();
+  else if (deepMode) finishStep();
+  else showDeepPrompt();
+}
+
+// ── 심화 유도 버튼
+function showDeepPrompt() {
+  const deep = QS_DEEP[S.step];
+
+  // 중급자는 자동으로 심화 진행
+  if (S.level === 'advanced' && deep) {
+    startDeep();
+    return;
+  }
+
+  // 초보자: 심화 버튼 노출 (심화 없으면 바로 다음)
+  if (!deep) { finishStep(); return; }
+
+  const d = document.createElement('div');
+  d.className = 'deep-prompt';
+  d.innerHTML = `
+    <div class="deep-btn" onclick="vibe(8);startDeep()">
+      <div class="deep-btn-icon">🔬</div>
+      <div class="deep-btn-text">
+        <div class="deep-btn-title">더 자세히 확인할게요</div>
+        <div class="deep-btn-sub">심화 질문으로 정확도를 높여요</div>
+      </div>
+      
+    </div>
+    <div class="deep-skip">
+      <button class="deep-skip-btn" onclick="skipDeep()">다음 항목으로 넘어갈게요 →</button>
+    </div>`;
+  C().appendChild(d); scroll();
+}
+
+function startDeep() {
+  deepMode = true; subIdx = 0;
+  const deep = QS_DEEP[S.step];
+  if (!deep) { finishStep(); return; }
+  stepData = deep;
+  askSub();
+}
+
+function skipDeep() {
+  userMsg('다음으로 넘어갈게요');
+  finishStep();
+}
+
+async function finishStep() {
+  botMsg('🍀 확인했어요!');
+  S.step++;
+  if (S.step <= 5) {
+    updateStep(S.step);
+    await typing(550);
+    startSubs();
+  } else {
+    updateStep(6);
+    await typing(1200);
+    showPrescription();
+  }
+}
+
+// ── 식물케어 리포트
+async function showPrescription() {
+  const p = S.plant, a = { ...S.answers, ...S.deepAnswers };
+  botMsg('📋 진단이 완료됐어요.<br>식물케어 리포트를 발급해드릴게요!');
+  await typing(1400);
+
+  // ── 점수 계산 (가산 방식 + 모름/미관리 감점)
+  const rawScore = Math.min(100, Math.max(0, (S.score || 0) + (S.deepScore || 0)));
+  // 만점 기준 보정 (기본 질문 만점 약 133점 → 100점 스케일로)
+  const MAX_BASE = 133;
+  const score = Math.round(Math.min(100, Math.max(0, (rawScore / MAX_BASE) * 100)));
+
+  const status =
+    score >= 90 ? '매우 건강해요 🌿' :
+    score >= 75 ? '건강한 편이에요 🌱' :
+    score >= 60 ? '관리가 필요해요 ⚠️' :
+    score >= 45 ? '즉시 개선이 필요해요 🚨' : '위험한 상태예요 💀';
+
+  // ── 진단 소견
+  const dx = [];
+  // 토양
+  if (a.soil_p === '질퍽하고 무거워요')      dx.push({ l:'토양 과습', s:'red',  d:'뿌리가 산소 부족으로 썩을 수 있어요' });
+  if (a.soil_p === '딱딱하고 갈라져요')       dx.push({ l:'토양 건조', s:'red',  d:'수분 흡수가 막혀 뿌리가 스트레스를 받아요' });
+  if (a.soil_d === '거의 안 빠져요' || a.soil_d === '화분 구멍이 없어요') dx.push({ l:'배수 불량', s:'red', d:'과습의 주요 원인이에요. 화분 구멍을 확인하세요' });
+  if (a.soil_b === '쉰내가 심하게 나요')      dx.push({ l:'뿌리 부패 의심', s:'red',  d:'즉시 흙을 교체하고 뿌리 상태를 확인하세요' });
+  if (a.soil_b === '벌레가 보여요')           dx.push({ l:'해충 발생', s:'red',  d:'살충제 또는 황토유황으로 방제가 필요해요' });
+  if (a.soil_c === '한 번도 안 줬어요')       dx.push({ l:'영양 결핍 가능성', s:'gold', d:'성장기에 영양 공급이 없으면 잎이 작아져요' });
+  if (a.soil_p === '확인 안 해봤어요')        dx.push({ l:'🔍 토양 상태 확인 필요', s:'check', d:'손가락을 1~2cm 넣어 흙의 습도를 확인해보세요' });
+  // 물/습도
+  if (a.w_when === '2주일 이상 됐어요')       dx.push({ l:'심각한 수분 부족', s:'red',  d:`${p.name}의 권장 물주기는 ${p.water}예요` });
+  if (a.w_when === '기억이 안 나요')          dx.push({ l:'🔍 물주기 주기 확인 필요', s:'check', d:'겉흙 1~2cm를 손가락으로 찔러 건조도를 확인해보세요' });
+  if (a.humid === '매우 건조해요')            dx.push({ l:'공중 습도 부족', s:'gold', d:`${p.name} 적정 습도는 ${p.humidity}예요` });
+  if (a.humid === '잘 모르겠어요')            dx.push({ l:'🔍 실내 습도 확인 필요', s:'check', d:'저렴한 습도계로 측정하거나, 피부가 건조하면 식물도 건조해요' });
+  // 대기
+  if (a.air_d === '직접 닿아요')              dx.push({ l:'냉난방 직바람', s:'red',  d:'잎 끝이 갈색으로 마르는 주요 원인이에요' });
+  if (a.air_v === '거의 안 해요' || a.air_v === '관리 안 해요') dx.push({ l:'통풍 부족', s:'gold', d:'균류·병해 발생 위험이 높아져요' });
+  // 온도
+  if (a.temp === '10°C 미만')                dx.push({ l:'저온 스트레스', s:'red',  d:`${p.name} 적정 온도는 ${p.temp}예요. 따뜻한 곳으로 이동해주세요` });
+  if (a.tdiff === '많이 달라요 (10°C 이상)') dx.push({ l:'급격한 온도 변화', s:'gold', d:'세포 손상이 일어날 수 있어요. 창가에서 조금 멀리 두세요' });
+  // 광
+  if (a.l_hr === '2시간 미만이에요')          dx.push({ l:'광량 심각 부족', s:'red',  d:'광합성이 호흡보다 적어 식물이 소진돼요' });
+  if (a.l_pos === '잘 모르겠어요')            dx.push({ l:'🔍 채광 환경 확인 필요', s:'check', d:'식물 근처에서 책이 잘 읽힐 정도면 최소 광량은 돼요' });
+  if (dx.length === 0) dx.push({ l:'환경 모두 양호해요 🎉', s:'grn', d:'지금 관리를 잘 유지하고 있어요!' });
+
+  // ── 추천 행동 3단계
+  const now = [], week = [], month = [];
+
+  // 즉시
+  if (dx.some(d=>d.l.includes('과습')||d.l.includes('부패'))) now.push('화분을 그늘지고 통풍 좋은 곳으로 이동시켜 흙을 말려주세요');
+  if (dx.some(d=>d.l.includes('직바람')))  now.push('에어컨·난방기에서 1m 이상 거리를 두거나 방향을 바꿔주세요');
+  if (dx.some(d=>d.l.includes('저온')))    now.push('식물을 따뜻한 실내 중앙으로 즉시 이동해주세요');
+  if (dx.some(d=>d.l.includes('심각한 수분'))) now.push('지금 바로 흙이 완전히 젖을 때까지 물을 충분히 주세요');
+  if (dx.some(d=>d.l.includes('해충')))    now.push('감염된 잎을 즉시 제거하고 다른 식물과 격리해주세요');
+  if (now.length === 0) now.push('현재 응급 조치가 필요한 상황은 없어요 🌿');
+
+  // 단기 (이번 주)
+  if (dx.some(d=>d.l.includes('배수')))    week.push('화분 구멍을 확인하고 막혔다면 뚫어주세요. 마사토 혼합도 고려해보세요');
+  if (dx.some(d=>d.l.includes('공중 습도'))) week.push('가습기를 설치하거나 하루 1~2회 잎에 분무해보세요');
+  if (dx.some(d=>d.l.includes('통풍')))    week.push('주 3~4회 창문을 열어 10분 이상 환기해주세요');
+  if (dx.some(d=>d.l.includes('광량')))    week.push('밝은 창가로 이동하거나 식물등(LED) 보조를 설치해보세요');
+  if (dx.some(d=>d.s==='check'))           week.push('습도계·온도계를 준비해서 환경을 직접 측정해보세요');
+  if (week.length === 0) week.push(`${p.water} 기준으로 규칙적인 물주기 루틴을 만들어보세요`);
+
+  // 장기 (한 달)
+  if (dx.some(d=>d.l.includes('영양')))    month.push('봄~여름 성장기에 2주 간격으로 희석 액비를 공급해주세요');
+  if (dx.some(d=>d.l.includes('토양 건조')||d.l.includes('배수'))) month.push('분갈이를 고려해보세요. 배수 좋은 흙으로 교체하면 효과적이에요');
+  if (dx.some(d=>d.l.includes('온도 변화'))) month.push('계절이 바뀔 때마다 식물 위치를 재점검해주세요');
+  month.push('한 달에 한 번 잎 상태·흙 상태·새싹 여부를 체크하는 루틴을 만들어보세요');
+
+  const today  = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric' });
+  const rxNo   = 'MG-' + Date.now().toString().slice(-6);
+  const lvlLabel = S.level === 'beginner' ? '초보 진단' : '정밀 진단';
+  const lvlClass = S.level === 'beginner' ? 'beginner' : 'advanced';
+
+  const rxWrap = document.createElement('div');
+  rxWrap.className = 'rx-wrap';
+  rxWrap.innerHTML = `
+    <div class="rx-card">
+      <div class="rx-header">
+        <div class="rx-header-left">
+          <div class="rx-cross">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <rect x="10" y="3" width="4" height="18" rx="1" fill="#003D09"/>
+              <rect x="3" y="10" width="18" height="4" rx="1" fill="#003D09"/>
+            </svg>
+          </div>
+          <div>
+            <div class="rx-title">식물케어 리포트</div>
+            <div class="rx-subtitle">마이그린 식물케어</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div class="rx-no">No. ${rxNo}</div>
+          <span class="rx-level-badge ${lvlClass}">${lvlLabel}</span>
+        </div>
+      </div>
+
+      <div class="rx-patient">
+        <div class="rx-field"><div class="rx-field-label">식물명</div><div class="rx-field-value">${p.emoji} ${p.name}</div></div>
+        <div class="rx-field"><div class="rx-field-label">학명</div><div class="rx-field-value" style="font-size:12px;font-style:italic">${p.sci||'미상'}</div></div>
+        <div class="rx-field"><div class="rx-field-label">진단일</div><div class="rx-field-value" style="font-size:12px">${today}</div></div>
+        <div class="rx-field"><div class="rx-field-label">건강 점수</div><div class="rx-field-value" style="color:var(--green)">${score}점</div></div>
+      </div>
+
+      <div class="rx-body">
+
+        <!-- 점수 -->
+        <div class="rx-score">
+          <div>
+            <div class="rx-score-num">${score}</div>
+            <div style="font-size:10px;color:var(--lgray);font-family:'Noto Sans KR'">/ 100점</div>
+          </div>
+          <div style="flex:1">
+            <div class="rx-score-bar-bg"><div class="rx-score-bar" id="scoreBar" style="width:0%"></div></div>
+            <div class="rx-score-status">${status}</div>
+          </div>
+        </div>
+
+        <!-- 진단 소견 -->
+        <div class="rx-section-title">📋 진단 소견</div>
+        <div class="rx-diagnosis">
+          ${dx.map(d=>`
+            <div class="rx-diag-row">
+              <div class="rx-diag-dot dot-${d.s==='check'?'gold':d.s}"></div>
+              <div>
+                <div class="rx-diag-main">${d.l}
+                  <span class="rx-badge-${d.s==='check'?'gold':d.s}">${d.s==='red'?'위험':d.s==='gold'?'주의':d.s==='check'?'확인필요':'양호'}</span>
+                </div>
+                <div class="rx-diag-sub">${d.d}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+
+        <!-- 추천 행동 3단계 -->
+        <div class="rx-section-title">🗓️ 추천 행동</div>
+
+        <div style="margin-bottom:6px">
+          <div style="font-size:11px;font-weight:700;color:#D32F2F;font-family:'Noto Sans KR',sans-serif;margin-bottom:5px;">🚨 즉시 (오늘)</div>
+          ${now.map(t=>`
+            <div class="rx-presc-row" style="background:#FFF3E0;margin-bottom:5px">
+              <div class="rx-presc-num" style="color:#E65100">!</div>
+              <div class="rx-presc-txt">${t}</div>
+            </div>`).join('')}
+        </div>
+
+        <div style="margin-bottom:6px">
+          <div style="font-size:11px;font-weight:700;color:var(--gold);font-family:'Noto Sans KR',sans-serif;margin-bottom:5px;">📅 이번 주</div>
+          ${week.map(t=>`
+            <div class="rx-presc-row" style="background:#FFFDE7;margin-bottom:5px">
+              <div class="rx-presc-num" style="color:var(--gold)">→</div>
+              <div class="rx-presc-txt">${t}</div>
+            </div>`).join('')}
+        </div>
+
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--green);font-family:'Noto Sans KR',sans-serif;margin-bottom:5px;">🌱 한 달 이내</div>
+          ${month.map(t=>`
+            <div class="rx-presc-row" style="margin-bottom:5px">
+              <div class="rx-presc-num">✓</div>
+              <div class="rx-presc-txt">${t}</div>
+            </div>`).join('')}
+        </div>
+
+      </div>
+
+      <div class="rx-footer">
+        <div class="rx-footer-left">마이그린 식물케어<br><span style="color:var(--lgray)">식물 백과 기반 진단</span></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div>
+            <div class="rx-footer-sign-name">마이그린 AI</div>
+            <div class="rx-footer-sign-date">${today}</div>
+          </div>
+          <div class="rx-stamp">MY<br>GREEN<br>인</div>
+        </div>
+      </div>
+    </div>`;
+  C().appendChild(rxWrap); scroll();
+  setTimeout(() => { const b = $('scoreBar'); if(b) b.style.width = score+'%'; }, 300);
+  if (navigator.vibrate) navigator.vibrate([20, 50, 20]); // 완료 진동 패턴
+
+  await typing(700);
+  botMsg('식물케어 리포트가 발급됐어요 🍀<br>아래 버튼으로 사진첩에 저장해보세요!');
+
+  // ── 다운로드 버튼
+  setTimeout(() => {
+    const dlWrap = document.createElement('div');
+    dlWrap.className = 'dl-wrap';
+    dlWrap.innerHTML = `
+      <button class="dl-btn img" onclick="vibe(8);saveImage()">
+        📸 사진첩에 저장하기
+      </button>`;
+    C().appendChild(dlWrap); scroll();
+  }, 400);
+
+  setTimeout(() => showTip(p), 1000);
+  $('inp').disabled = true;
+  $('inp').placeholder = '진단이 완료됐어요';
+  stepData = null;
+}
+
+// ── 제보 UI
+function showTip(p) {
+  const w = document.createElement('div');
+  w.className = 'tip-wrap';
+  w.innerHTML = `
+    <div class="tip-trigger" onclick="toggleTip(this)">
+      <div class="tip-trigger-icon">💚</div>
+      <div>
+        <div class="tip-trigger-main">${p.emoji} ${p.name} 정보를 알고 있나요?</div>
+        <div class="tip-trigger-sub">직접 제보하면 다른 분들에게 도움이 돼요</div>
+      </div>
+      
+    </div>
+    <div class="tip-panel" id="tipPanel">
+      <div class="tip-panel-hdr">
+        <div class="tip-panel-title">🌿 식물 정보 제보하기</div>
+        <button class="tip-panel-close" onclick="toggleTip(this.closest('.tip-wrap').querySelector('.tip-trigger'))">✕</button>
+      </div>
+      <div class="tip-body" id="tipForm">
+        <div class="tip-label">📌 어떤 정보인가요?</div>
+        <div class="tip-cats">
+          <button class="tip-cat" onclick="pickCat(this)">💧 물주기</button>
+          <button class="tip-cat" onclick="pickCat(this)">☀️ 빛</button>
+          <button class="tip-cat" onclick="pickCat(this)">🌱 토양</button>
+          <button class="tip-cat" onclick="pickCat(this)">🌡️ 온도</button>
+          <button class="tip-cat" onclick="pickCat(this)">🐛 병해</button>
+          <button class="tip-cat" onclick="pickCat(this)">✏️ 기타</button>
+        </div>
+        <div class="tip-label">📝 알고 있는 정보를 알려주세요</div>
+        <textarea class="tip-textarea" id="tipTxt" placeholder="예: 이 식물은 여름에 물을 더 자주 줘야 해요 🌿" onkeyup="chkTip()"></textarea>
+        <button class="tip-submit" id="tipBtn" onclick="submitTip('${p.name}')" disabled>💚 제보 등록하기</button>
+        <div class="tip-note">검토 후 Wiki에 반영돼요 · 허위 정보는 반영되지 않아요</div>
+      </div>
+      <div class="tip-done" id="tipDone">
+        <div class="tip-done-ico">🌿</div>
+        <div class="tip-done-ttl">제보해주셔서 감사해요!</div>
+        <div class="tip-done-txt">검토 후 <strong>${p.name}</strong> Wiki에 반영될 예정이에요 💚</div>
+      </div>
+    </div>`;
+  C().appendChild(w); scroll();
+}
+
+function toggleTip(t) {
+  const p = $('tipPanel');
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) scroll();
+}
+function pickCat(b) { document.querySelectorAll('.tip-cat').forEach(x=>x.classList.remove('on')); b.classList.add('on'); chkTip(); }
+function chkTip() { const ok = document.querySelector('.tip-cat.on') && $('tipTxt')?.value.trim().length>5; const b=$('tipBtn'); if(b) b.disabled=!ok; }
+
+async function submitTip(plantName) {
+  const cat = document.querySelector('.tip-cat.on')?.textContent || '';
+  const txt = $('tipTxt')?.value.trim() || '';
+  if (!cat || !txt) return;
+
+  const btn = $('tipBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+
+  try {
+    await fetch(BUBBLE_API.requestUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${BUBBLE_API.key}`
+      },
+      body: JSON.stringify({
+        plant_name:      plantName,
+        request_count:   1,
+        first_requested: new Date().toISOString(),
+        last_requested:  new Date().toISOString(),
+        status:          '제보_' + cat.trim(),
+        text:            txt
+      })
+    });
+    console.log('✅ 제보 저장 완료:', plantName, cat, txt);
+  } catch(e) {
+    console.error('제보 저장 오류:', e);
+  }
+
+  $('tipForm').style.display = 'none';
+  $('tipDone').classList.add('show');
+  scroll();
+}
+
+// ── 식물케어 리포트 새 창으로 열기
+// ── 저장 로딩 표시
+function showSaveLoading(msg) {
+  let ov = document.getElementById('save-loading');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'save-loading';
+    ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;';
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = `<div style="background:white;border-radius:20px;padding:28px 32px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.2);">
+    <div style="font-size:36px;margin-bottom:10px;">⏳</div>
+    <div style="font-size:15px;font-weight:700;color:#003D09;font-family:'Noto Sans KR',sans-serif;">${msg}</div>
+  </div>`;
+  ov.style.display = 'flex';
+}
+function hideSaveLoading() {
+  const ov = document.getElementById('save-loading');
+  if (ov) ov.style.display = 'none';
+}
+
+// ── 이미지 저장 (실제 다운로드)
+async function saveImage() {
+  const plantName = S.plant?.name || '식물';
+  const today = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+  const rxCard = document.querySelector('.rx-card');
+  if (!rxCard) { alert('리포트가 없어요. 진단을 완료해주세요!'); return; }
+
+  showSaveLoading('이미지 저장 중이에요...');
+
+  try {
+    // 스코어바 너비 확인
+    const bar = rxCard.querySelector('.rx-score-bar');
+    if (bar && !bar.style.width) bar.style.width = '60%';
+
+    const dataUrl = await domtoimage.toPng(rxCard, {
+      scale: 2,
+      bgcolor: '#ffffff',
+      style: { borderRadius: '0' }
+    });
+
+    const link = document.createElement('a');
+    link.download = `마이그린_리포트_${plantName}_${today}.png`;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    hideSaveLoading();
+
+  } catch(e) {
+    console.error('이미지 저장 오류:', e);
+    hideSaveLoading();
+    // 실패 시 새 창으로 대체
+    const html = buildRxHTML('image');
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const win  = window.open(url, '_blank');
+    if (!win) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `마이그린_리포트_${plantName}_${today}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  }
+}
+
+// ── 리포트 저장
+async function openRxWindow(mode) {
+  const plantName = S.plant?.name || '식물';
+  const today = new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+  const rxCard = document.querySelector('.rx-card');
+  if (!rxCard) { alert('리포트가 없어요. 진단을 완료해주세요!'); return; }
+
+  showSaveLoading(mode === 'pdf' ? 'PDF 준비 중이에요...' : '이미지 준비 중이에요...');
+
+  const rxHTML = rxCard.outerHTML;
+  const modeGuide = mode === 'pdf'
+    ? '<button class="sbtn" onclick="window.print()">📄 PDF로 저장하기</button>'
+    : '<div style="background:#E8F5E9;border-radius:12px;padding:14px;text-align:center;margin-bottom:12px;"><div style="font-size:22px;margin-bottom:6px;">📸</div><div style="font-size:14px;font-weight:700;color:#003D09;margin-bottom:4px;">사진첩에 저장하기</div><div style="font-size:12px;color:#888;line-height:1.6;">아래 리포트를 <strong>꾹 눌러</strong> 이미지 저장<br>또는 스크린샷으로 저장해주세요</div></div>';
+
+  const html = [
+    '<!DOCTYPE html><html lang="ko"><head>',
+    '<meta charset="UTF-8">',
+    '<title>마이그린 식물케어 리포트</title>',
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">',
+    '<style>',
+    '*{box-sizing:border-box;margin:0;padding:0;}',
+    ':root{--green:#003D09;--fresh:#5FB96B;--mint:#E8F5E9;--black:#1A1A1A;--gray:#888;--lgray:#C8C8C8;--border:#EBEBEB;--gold:#C9A227;--white:#FFFFFF;--bg:#F5F5F5;--red:#D32F2F;--peach:#FF8A7A;}',
+    'body{font-family:"Noto Sans KR",sans-serif;background:#f0f5f0;padding:24px 16px 40px;overflow:auto;}',
+    '.rx-card{max-width:440px;margin:0 auto;background:#fff;border:2px solid #1A1A1A;border-radius:4px;overflow:hidden;box-shadow:4px 4px 0 rgba(0,0,0,0.15);font-family:"Nanum Myeongjo",serif;}',
+    '.rx-header{background:#003D09;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}',
+    '.rx-header-left{display:flex;align-items:center;gap:10px;}',
+    '.rx-cross{width:28px;height:28px;background:white;border-radius:4px;display:flex;align-items:center;justify-content:center;}',
+    '.rx-title{color:white;font-size:16px;font-weight:700;font-family:"Noto Sans KR",sans-serif;letter-spacing:1px;}',
+    '.rx-subtitle{color:rgba(255,255,255,0.75);font-size:11px;font-family:"Noto Sans KR",sans-serif;margin-top:2px;}',
+    '.rx-no{color:rgba(255,255,255,0.6);font-size:11px;font-family:"Noto Sans KR",sans-serif;}',
+    '.rx-level-badge{padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;font-family:"Noto Sans KR",sans-serif;}',
+    '.rx-level-badge.beginner{background:#E3F2FD;color:#1565C0;}',
+    '.rx-level-badge.advanced{background:#F3E5F5;color:#6A1B9A;}',
+    '.rx-patient{padding:12px 18px;border-bottom:1px dashed #ccc;display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#fafafa;}',
+    '.rx-field-label{font-size:10px;color:#888;font-family:"Noto Sans KR",sans-serif;}',
+    '.rx-field-value{font-size:14px;font-weight:700;color:#1A1A1A;font-family:"Noto Sans KR",sans-serif;}',
+    '.rx-body{padding:14px 18px;}',
+    '.rx-section-title{font-size:11px;font-weight:700;color:#888;font-family:"Noto Sans KR",sans-serif;letter-spacing:0.8px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #EBEBEB;}',
+    '.rx-score{display:flex;align-items:center;gap:12px;background:#F5F5F5;border-radius:10px;padding:10px 14px;margin-bottom:14px;}',
+    '.rx-score-num{font-size:34px;font-weight:900;color:#003D09;font-family:"Noto Sans KR",sans-serif;line-height:1;}',
+    '.rx-score-status{font-size:14px;font-weight:700;color:#1A1A1A;font-family:"Noto Sans KR",sans-serif;margin-top:2px;}',
+    '.rx-score-bar-bg{flex:1;height:8px;background:#EBEBEB;border-radius:4px;overflow:hidden;}',
+    '.rx-score-bar{height:100%;background:linear-gradient(90deg,#003D09,#5FB96B);border-radius:4px;}',
+    '.rx-diagnosis{margin-bottom:14px;}',
+    '.rx-diag-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px dotted #eee;}',
+    '.rx-diag-row:last-child{border-bottom:none;}',
+    '.rx-diag-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;}',
+    '.dot-red{background:#FF8A7A;}.dot-gold{background:#C9A227;}.dot-grn{background:#5FB96B;}',
+    '.rx-diag-main{font-size:14px;font-weight:700;color:#1A1A1A;font-family:"Noto Sans KR",sans-serif;}',
+    '.rx-diag-sub{font-size:12px;color:#888;font-family:"Noto Sans KR",sans-serif;margin-top:2px;line-height:1.4;}',
+    '.rx-badge-red{display:inline-block;background:#fde8e8;color:#D32F2F;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:5px;font-family:"Noto Sans KR",sans-serif;}',
+    '.rx-badge-gold{display:inline-block;background:#fff8e1;color:#C9A227;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:5px;font-family:"Noto Sans KR",sans-serif;}',
+    '.rx-badge-grn{display:inline-block;background:#E8F5E9;color:#003D09;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:5px;font-family:"Noto Sans KR",sans-serif;}',
+    '.rx-presc-row{display:flex;align-items:flex-start;gap:10px;padding:7px 10px;border-radius:8px;background:#E8F5E9;margin-bottom:5px;}',
+    '.rx-presc-num{font-size:14px;font-weight:900;color:#003D09;flex-shrink:0;font-family:"Noto Sans KR",sans-serif;}',
+    '.rx-presc-txt{font-size:13px;color:#1A1A1A;font-family:"Noto Sans KR",sans-serif;line-height:1.5;}',
+    '.rx-footer{padding:10px 18px 14px;border-top:1px dashed #ccc;display:flex;align-items:center;justify-content:space-between;background:#fafafa;}',
+    '.rx-footer-sign-name{font-size:14px;font-weight:700;color:#003D09;font-family:"Nanum Myeongjo",serif;}',
+    '.rx-footer-sign-date{font-size:10px;color:#C8C8C8;font-family:"Noto Sans KR",sans-serif;margin-top:2px;}',
+    '.rx-stamp{width:44px;height:44px;border:2px solid #D32F2F;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#D32F2F;font-size:10px;font-weight:700;font-family:"Noto Sans KR",sans-serif;text-align:center;line-height:1.2;transform:rotate(-15deg);flex-shrink:0;}',
+    '.wrap-area{max-width:440px;margin:0 auto 16px;}',
+    '.sbtn{width:100%;background:#003D09;color:white;border:none;border-radius:14px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:"Noto Sans KR",sans-serif;margin-bottom:8px;display:block;}',
+    '.sbtn:hover{background:#5FB96B;}',
+    '.sbtn.sec{background:white;color:#1A1A1A;border:1.5px solid #EBEBEB;}',
+    '@media print{.wrap-area{display:none !important;}.rx-card{box-shadow:none !important;border:1px solid #ccc !important;}}',
+    '</style></head><body>',
+    '<div class="wrap-area">',
+    modeGuide,
+    '<button class="sbtn sec" onclick="window.close()">← 돌아가기</button>',
+    '</div>',
+    rxHTML,
+    '<scr' + 'ipt>window.onload=()=>{const b=document.querySelector(".rx-score-bar");if(b)b.style.width=b.style.width||"60%";};' + '<\/scr' + 'ipt>',
+    '</body></html>'
+  ].join('');
+
+  try {
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    hideSaveLoading();
+    const win = window.open(url, '_blank');
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '마이그린_리포트_' + plantName + '_' + today + '.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  } catch(e) {
+    hideSaveLoading();
+    alert('저장에 실패했어요. 스크린샷으로 저장해주세요.');
+    console.error(e);
+  }
+  $('inp').placeholder = '식물 이름이나 생김새를 입력하세요';
+}
+
+// ── 전송
+async function send() {
+  const inp = $('inp');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  userMsg(txt);
+  if (S.step === 0) { await handlePlantInput(txt); return; }
+  if (stepData)     { await handleAns(txt); }
+}
+
+// ── 초기화
+let initDone = false;
+
+async function init() {
+  if (initDone) return;
+  const chatEl = document.getElementById('chat');
+  if (!chatEl) return;
+  initDone = true;
+  await typing(600);
+  botMsg('안녕하세요! 🌝');
+  await typing(500);
+  botMsg('마이그린 식물케어입니다.');
+  await typing(600);
+  botMsg('당신의 식물 이름을 알려주세요.<br><br>환경 5가지 요소에 맞춰<br>현재 식물의 환경을 점검해드립니다.');
+  $('inp').disabled = false;
+  $('inp').placeholder = '식물 이름이나 생김새를 입력하세요';
+}
+
+function tryInit() {
+  if (!initDone && document.getElementById('chat')) {
+    init();
+  }
+}
+
+// 1. 즉시 시도
+tryInit();
+// 2. DOM 로드 후
+document.addEventListener('DOMContentLoaded', () => {
+  tryInit();
+  // 엔터키 이벤트 강화
+  const inp = document.getElementById('inp');
+  if (inp) {
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.keyCode === 13) {
+        e.preventDefault();
+        send();
+      }
+    });
+  }
+});
+// 3. 완전 로드 후
+window.addEventListener('load', tryInit);
+// 4. 엘리멘터 렌더링 대기 (500ms)
+setTimeout(tryInit, 500);
+// 5. 더 늦게 한 번 더 (엘리멘터 지연 대응)
+setTimeout(tryInit, 1500);
+</script>
+</body>
+</html>
