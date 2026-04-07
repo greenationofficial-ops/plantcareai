@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>나에게 꽃샤워 | MYGREEN</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <style>
+        :root {
+            --main-green: #003D09;
+            --deep-green: #004600;
+            --fresh-lime: #5FB96B;
+            --ivory: #F8F6ED;
+            --black: #212121;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--ivory);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: var(--ivory);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 상단 헤더 */
+        .top-bar {
+            background: var(--ivory);
+            padding: 12px 16px;
+        }
+
+        .top-logo {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--main-green);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .top-logo::before {
+            content: '💚';
+            font-size: 16px;
+        }
+
+        /* 네비게이션 바 */
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--ivory);
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-btn:active {
+            opacity: 0.5;
+        }
+
+        .nav-content {
+            flex: 1;
+            text-align: center;
+            margin-right: 40px;
+        }
+
+        .nav-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--black);
+        }
+
+        .nav-subtitle {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        /* 메인 영역 */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 꽃비 캔버스 - 전체 화면 */
+        .flower-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        /* 꽃잎 */
+        .petal {
+            position: absolute;
+            animation: fall linear forwards;
+            pointer-events: none;
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-20px) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(50vh) translateX(var(--sway)) rotate(360deg);
+            }
+            100% {
+                transform: translateY(100vh) translateX(calc(var(--sway) * 0.5)) rotate(720deg);
+                opacity: 0.8;
+            }
+        }
+
+        /* 콘텐츠 카드 */
+        .content-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,61,9,0.1);
+            z-index: 5;
+            max-width: 320px;
+            width: 100%;
+        }
+
+        .card-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 12px;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: #888;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        .shower-btn {
+            background: linear-gradient(135deg, #FF6B9D 0%, #FF8A7A 50%, #FFB347 100%);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-size: 17px;
+            font-weight: 700;
+            font-family: 'Pretendard', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(255,107,157,0.4);
+        }
+
+        .shower-btn:active {
+            transform: scale(0.95);
+        }
+
+        .shower-btn.playing {
+            background: linear-gradient(135deg, var(--main-green) 0%, var(--fresh-lime) 100%);
+            box-shadow: 0 4px 20px rgba(0,61,9,0.3);
+        }
+
+        /* 메시지 */
+        .message {
+            position: fixed;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--main-green);
+            text-align: center;
+            opacity: 0;
+            z-index: 150;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.9), 0 0 20px white;
+            pointer-events: none;
+            background: rgba(255,255,255,0.9);
+            padding: 14px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,61,9,0.15);
+            white-space: nowrap;
+        }
+
+        .message.show {
+            animation: messageShow 3s ease forwards;
+        }
+
+        @keyframes messageShow {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            30% { transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* 하단 홍보 영역 */
+        .promo-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 20px;
+            margin: 16px;
+            text-align: center;
+        }
+
+        .promo-text {
+            font-size: 14px;
+            color: #888;
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .promo-link {
+            display: block;
+            background: var(--main-green);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .promo-stores {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .store-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            font-size: 11px;
+        }
+
+        .store-badge.google-play {
+            background: var(--main-green);
+        }
+
+        .store-badge.app-store {
+            background: var(--deep-green);
+        }
+
+        .store-icon {
+            font-size: 16px;
+        }
+
+        .store-text {
+            text-align: left;
+            line-height: 1.2;
+        }
+
+        .store-text small {
+            display: block;
+            font-size: 8px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- 꽃비 캔버스 - 전체 화면 -->
+    <div class="flower-canvas" id="flowerCanvas"></div>
+    
+    <div class="container">
+        <!-- 상단 로고 -->
+        <div class="top-bar">
+            <div class="top-logo">MYGREEN</div>
+        </div>
+
+        <!-- 네비게이션 바 -->
+        <nav class="nav-bar">
+            <button class="back-btn" onclick="goBack()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 19L8 12L15 5" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <div class="nav-content">
+                <div class="nav-title">나에게 꽃샤워</div>
+                <div class="nav-subtitle">오늘 하루 수고한 나에게 꽃비를 내려요</div>
+            </div>
+        </nav>
+
+        <!-- 메인 영역 -->
+        <main>
+            <div class="message" id="message">
+                오늘도 수고했어, 나 💐
+            </div>
+
+            <div class="content-card">
+                <div class="card-icon">💐</div>
+                <h2 class="card-title">꽃샤워 받기</h2>
+                <p class="card-desc">버튼을 누르면<br>예쁜 꽃비가 내려요 🌸</p>
+                <button class="shower-btn" id="showerBtn" onclick="startFlowerShower()">
+                    🌸 꽃비 내리기
+                </button>
+            </div>
+        </main>
+
+        <!-- 하단 홍보 영역 -->
+        <div class="promo-section">
+            <p class="promo-text">MYGREEN과 함께<br>식물 힐링을 시작해보세요!</p>
+            <a href="https://www.mygreen.co.kr" target="_blank" rel="noopener noreferrer" onclick="openExternal(this.href); return false;" class="promo-link">www.마이그린.com</a>
+            <div class="promo-stores">
+                <a href="https://play.google.com/store/apps/details?id=com.greenation.mygreen" target="_blank" rel="noopener noreferrer" onclick="openExternal(this.href); return false;" class="store-badge google-play">
+                    <span class="store-icon">▶</span>
+                    <span class="store-text"><small>GET IT ON</small>Google Play</span>
+                </a>
+                <a href="https://apps.apple.com/kr/app/%EB%A7%88%EC%9D%B4%EA%B7%B8%EB%A6%B0mygreen/id6753066141" target="_blank" rel="noopener noreferrer" onclick="openExternal(this.href); return false;" class="store-badge app-store">
+                    <span class="store-icon"></span>
+                    <span class="store-text"><small>Download on the</small>App Store</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 뒤로가기
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = 'https://app.mygreen.club';
+            }
+        }
+
+        // 외부 링크 열기
+        function openExternal(url) {
+            if (window.open(url, '_system')) return;
+            if (window.open(url, '_blank')) return;
+            window.location.href = url;
+        }
+
+        // 꽃 이모지 목록 (풍성하게 확장, 검은색/파란색 제외)
+        const flowers = [
+            // 메인 꽃들
+            '🌸', '🌸', '🌸',  // 벚꽃 (가중치)
+            '🌺', '🌺',        // 히비스커스
+            '🌷', '🌷',        // 튤립
+            '🌹',              // 장미
+            '💐', '💐',        // 꽃다발
+            '🌻',              // 해바라기
+            '🪻',              // 히아신스
+            '🪷', '🪷',        // 연꽃
+            '💮',              // 흰 꽃
+            '🌼', '🌼',        // 꽃송이
+            // 포인트 요소
+            '🍀',              // 네잎클로버
+            '🌿',              // 잎사귀
+            '🍃', '🍃',        // 나뭇잎
+            '✨', '✨', '✨',  // 반짝임 (가중치)
+            '💖',              // 하트
+            '💕',              // 하트들
+            '🩷',              // 핑크하트
+        ];
+        
+        // 응원 메시지 (짧게, 한 줄)
+        const messages = [
+            '오늘도 수고했어, 나 💐',
+            '나는 잘하고 있어 🌸',
+            '오늘 하루도 잘 버텼어 🌷',
+            '나의 노력은 빛나고 있어 ✨',
+            '있는 그대로의 내가 좋아 🌹',
+            '수고 많았어, 나 💐',
+            '넌 충분히 잘하고 있어 🌻',
+            '오늘도 최선을 다한 나, 대견해 💖'
+        ];
+
+        let isPlaying = false;
+
+        function startFlowerShower() {
+            if (isPlaying) return;
+            
+            isPlaying = true;
+            const btn = document.getElementById('showerBtn');
+            btn.classList.add('playing');
+            btn.textContent = '🌸 꽃비가 내려요...';
+
+            const canvas = document.getElementById('flowerCanvas');
+            canvas.innerHTML = '';
+
+            // 랜덤 메시지 표시
+            const messageEl = document.getElementById('message');
+            messageEl.innerHTML = messages[Math.floor(Math.random() * messages.length)];
+            messageEl.classList.remove('show');
+            
+            setTimeout(() => {
+                messageEl.classList.add('show');
+            }, 800);
+
+            // 꽃비 생성 (성능 최적화)
+            let petalCount = 0;
+            const maxPetals = 600;
+            
+            const interval = setInterval(() => {
+                if (petalCount >= maxPetals) {
+                    clearInterval(interval);
+                    return;
+                }
+
+                // 한 번에 15개씩 생성
+                for (let i = 0; i < 15; i++) {
+                    createPetal(canvas);
+                    petalCount++;
+                }
+            }, 150);
+
+            // 10초 후 종료
+            setTimeout(() => {
+                isPlaying = false;
+                btn.classList.remove('playing');
+                btn.textContent = '🌸 다시 꽃비 내리기';
+                messageEl.classList.remove('show');
+            }, 10000);
+        }
+
+        function createPetal(canvas) {
+            const petal = document.createElement('div');
+            petal.className = 'petal';
+            const flower = flowers[Math.floor(Math.random() * flowers.length)];
+            petal.textContent = flower;
+            
+            // 랜덤 위치 (화면 전체)
+            const startX = Math.random() * 100;
+            petal.style.left = startX + '%';
+            petal.style.top = '-50px';
+            
+            // 랜덤 크기 (흰색 꽃은 더 크게)
+            let size;
+            if (flower === '💮') {
+                size = 22 + Math.random() * 12;  // 22~34px (흰색 꽃)
+            } else {
+                size = 12 + Math.random() * 10;  // 12~22px (일반)
+            }
+            petal.style.fontSize = size + 'px';
+            
+            // 랜덤 속도 (8~12초 - 아주 천천히)
+            const duration = 8 + Math.random() * 4;
+            petal.style.animationDuration = duration + 's';
+            
+            // 좌우 흔들림 (부드럽게)
+            const swayAmount = (Math.random() - 0.5) * 80;
+            petal.style.setProperty('--sway', swayAmount + 'px');
+            
+            // 시작 딜레이 (자연스러운 분산)
+            const delay = Math.random() * 0.3;
+            petal.style.animationDelay = delay + 's';
+            
+            canvas.appendChild(petal);
+
+            // 애니메이션 끝나면 제거
+            setTimeout(() => {
+                petal.remove();
+            }, (duration + delay) * 1000 + 100);
+        }
+    </script>
+</body>
+</html>
