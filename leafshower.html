@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>나에게 그린샤워 | MYGREEN</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+    <style>
+        :root {
+            --main-green: #003D09;
+            --deep-green: #004600;
+            --fresh-lime: #5FB96B;
+            --light-green: #E8F5E9;
+            --ivory: #F8F6ED;
+            --white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--light-green);
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 50%, #E8F5E9 100%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 상단 헤더 */
+        .top-bar {
+            background: transparent;
+            padding: 12px 16px;
+        }
+
+        .top-logo {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--main-green);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .top-logo::before {
+            content: '💚';
+            font-size: 16px;
+        }
+
+        /* 네비게이션 바 */
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: transparent;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-btn:active {
+            opacity: 0.5;
+        }
+
+        .nav-content {
+            flex: 1;
+            text-align: center;
+            margin-right: 40px;
+        }
+
+        .nav-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--main-green);
+        }
+
+        .nav-subtitle {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        /* 메인 영역 */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            padding-bottom: 100px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 잎비 캔버스 - 전체 화면 */
+        .leaf-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        /* 잎 */
+        .leaf {
+            position: absolute;
+            animation: fall linear forwards;
+            pointer-events: none;
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,61,9,0.2));
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-20px) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(50vh) translateX(var(--sway)) rotate(360deg);
+            }
+            100% {
+                transform: translateY(100vh) translateX(calc(var(--sway) * 0.5)) rotate(720deg);
+                opacity: 0.8;
+            }
+        }
+
+        /* 콘텐츠 카드 */
+        .content-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,61,9,0.15);
+            z-index: 5;
+            max-width: 320px;
+            width: 100%;
+            border: 1px solid rgba(0,61,9,0.1);
+        }
+
+        .card-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--main-green);
+            margin-bottom: 12px;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        .shower-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 50%, #81C784 100%);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-size: 17px;
+            font-weight: 700;
+            font-family: 'Pretendard', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(76,175,80,0.4);
+        }
+
+        .shower-btn:active {
+            transform: scale(0.95);
+        }
+
+        .shower-btn.playing {
+            background: linear-gradient(135deg, var(--main-green) 0%, var(--deep-green) 100%);
+            box-shadow: 0 4px 20px rgba(0,61,9,0.4);
+        }
+
+        /* 메시지 */
+        .message {
+            position: fixed;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--main-green);
+            text-align: center;
+            opacity: 0;
+            z-index: 150;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.9);
+            pointer-events: none;
+            background: rgba(255,255,255,0.95);
+            padding: 14px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,61,9,0.15);
+            border: 1px solid rgba(0,61,9,0.1);
+            white-space: nowrap;
+        }
+
+        .message.show {
+            animation: messageShow 3s ease forwards;
+        }
+
+        @keyframes messageShow {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            30% { transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* 하단 홍보 영역 */
+        .promo-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 20px;
+            margin: 16px;
+            margin-bottom: 140px;
+            text-align: center;
+            border: 1px solid rgba(0,61,9,0.1);
+        }
+
+        .promo-text {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .promo-link {
+            display: block;
+            background: var(--main-green);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .promo-stores {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .store-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            font-size: 11px;
+        }
+
+        .store-badge.google-play {
+            background: var(--main-green);
+        }
+
+        .store-badge.app-store {
+            background: var(--deep-green);
+        }
+
+        .store-icon {
+            font-size: 16px;
+        }
+
+        .store-text {
+            text-align: left;
+            line-height: 1.2;
+        }
+
+        .store-text small {
+            display: block;
+            font-size: 8px;
+            opacity: 0.8;
+        }
+
+        /* 하단 컨트롤 바 */
+        .control-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 430px;
+            background: rgba(255,255,255,0.95);
+            border-top: 1px solid rgba(0,61,9,0.1);
+            padding: 16px 20px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
+            z-index: 200;
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .control-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Pretendard', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76,175,80,0.4);
+        }
+
+        .play-btn:active {
+            transform: scale(0.95);
+        }
+
+        .stop-btn {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.4);
+        }
+
+        .stop-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <!-- 잎비 캔버스 - 전체 화면 -->
+    <div class="leaf-canvas" id="leafCanvas"></div>
+    
+    <div class="container">
+        <!-- 상단 로고 -->
+        <div class="top-bar">
+            <div class="top-logo">MYGREEN</div>
+        </div>
+
+        <!-- 네비게이션 바 -->
+        <nav class="nav-bar">
+            <button class="back-btn" onclick="goBack()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 19L8 12L15 5" stroke="#003D09" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <div class="nav-content">
+                <div class="nav-title">나에게 그린 샤워</div>
+                <div class="nav-subtitle">오늘 하루도 소중한 나에게 그린을 보내요</div>
+            </div>
+        </nav>
+
+        <!-- 메인 영역 -->
+        <main>
+            <div class="message" id="message">
+                오늘도 수고했어, 나 🌿
+            </div>
+
+            <div class="content-card">
+                <div class="card-icon">🌿</div>
+                <h2 class="card-title">그린 샤워 받기</h2>
+                <p class="card-desc">버튼을 누르면<br>싱그러운 그린을 만나요 🍃</p>
+                <button class="shower-btn" id="showerBtn" onclick="startLeafShower()">
+                    🌿 잎비 내리기
+                </button>
+            </div>
+        </main>
+
+        <!-- 하단 홍보 영역 -->
+        <div class="promo-section">
+            <p class="promo-text">MYGREEN과 함께<br>식물 힐링을 시작해보세요!</p>
+            <a href="https://www.mygreen.co.kr" target="_blank" rel="noopener noreferrer" class="promo-link">www.마이그린.com</a>
+            <div class="promo-stores">
+                <a href="https://play.google.com/store/apps/details?id=com.greenation.mygreen" target="_blank" rel="noopener noreferrer" class="store-badge google-play">
+                    <span class="store-icon">▶</span>
+                    <span class="store-text"><small>GET IT ON</small>Google Play</span>
+                </a>
+                <a href="https://apps.apple.com/kr/app/%EB%A7%88%EC%9D%B4%EA%B7%B8%EB%A6%B0mygreen/id6753066141" target="_blank" rel="noopener noreferrer" class="store-badge app-store">
+                    <span class="store-icon"></span>
+                    <span class="store-text"><small>Download on the</small>App Store</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 하단 컨트롤 바 -->
+        <div class="control-bar">
+            <div class="control-buttons">
+                <button class="control-btn play-btn" id="playBtn" onclick="startLeafShower()">
+                    ▶ 재생
+                </button>
+                <button class="control-btn stop-btn" id="stopBtn" onclick="stopLeafShower()">
+                    ⏹ 멈춤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 뒤로가기
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = 'https://app.mygreen.club';
+            }
+        }
+
+        // 잎 이모지 목록
+        const leaves = [
+            '🌿', '🌿', '🌿', '🌿', '🌿', '🌿', '🌿', '🌿', '🌿', '🌿',  // 허브 10개
+            '🍃', '🍃', '🍃', '🍃', '🍃', '🍃', '🍃', '🍃', '🍃', '🍃',  // 나뭇잎 10개
+            '☘️', '☘️', '☘️', '☘️', '☘️', '☘️',                          // 클로버 6개
+            '🍀', '🍀', '🍀', '🍀', '🍀',                                // 네잎클로버 5개
+        ];
+        
+        // 응원 메시지
+        const messages = [
+            '오늘도 고마웠어, 나 🌿',
+            '나는 잘 자라고 있어 🌱',
+            '오늘 하루도 잘 지냈어 🍃',
+            '나의 노력은 싹트고 있어 ☘️',
+            '있는 그대로의 내가 좋아 🍀',
+            '수고 많았어, 나 🌿',
+            '넌 충분히 잘하고 있어 🌱',
+            '오늘도 성장한 나, 대견해 💚'
+        ];
+
+        let isPlaying = false;
+        let leafInterval = null;
+        let messageInterval = null;
+
+        function startLeafShower() {
+            if (isPlaying) return;
+            
+            isPlaying = true;
+            
+            // 버튼 상태 업데이트
+            const btn = document.getElementById('showerBtn');
+            btn.classList.add('playing');
+            btn.textContent = '🍃 그린이 내려요...';
+            
+            document.getElementById('playBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+
+            const canvas = document.getElementById('leafCanvas');
+            canvas.innerHTML = '';
+
+            // 첫 메시지 표시
+            showRandomMessage();
+
+            // 잎비 끊임없이 생성
+            leafInterval = setInterval(() => {
+                for (let i = 0; i < 8; i++) {
+                    createLeaf(canvas);
+                }
+            }, 250);
+
+            // 메시지 주기적으로 표시 (10초마다)
+            messageInterval = setInterval(() => {
+                showRandomMessage();
+            }, 10000);
+        }
+
+        function stopLeafShower() {
+            if (!isPlaying) return;
+            
+            isPlaying = false;
+            
+            // 버튼 상태 업데이트
+            const btn = document.getElementById('showerBtn');
+            btn.classList.remove('playing');
+            btn.textContent = '🌿 그린 내리기';
+            
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+
+            // 인터벌 정리
+            if (leafInterval) {
+                clearInterval(leafInterval);
+                leafInterval = null;
+            }
+            if (messageInterval) {
+                clearInterval(messageInterval);
+                messageInterval = null;
+            }
+
+            // 캔버스 정리
+            const canvas = document.getElementById('leafCanvas');
+            canvas.innerHTML = '';
+
+            // 메시지 숨기기
+            document.getElementById('message').classList.remove('show');
+        }
+
+        function showRandomMessage() {
+            const messageEl = document.getElementById('message');
+            messageEl.innerHTML = messages[Math.floor(Math.random() * messages.length)];
+            messageEl.classList.remove('show');
+            
+            setTimeout(() => {
+                messageEl.classList.add('show');
+            }, 100);
+        }
+
+        function createLeaf(canvas) {
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf';
+            const leafEmoji = leaves[Math.floor(Math.random() * leaves.length)];
+            leaf.textContent = leafEmoji;
+            
+            // 랜덤 위치
+            const startX = Math.random() * 100;
+            leaf.style.left = startX + '%';
+            leaf.style.top = '-50px';
+            
+            // 랜덤 크기
+            const size = 12 + Math.random() * 10;
+            leaf.style.fontSize = size + 'px';
+            
+            // 랜덤 속도 (8~12초)
+            const duration = 8 + Math.random() * 4;
+            leaf.style.animationDuration = duration + 's';
+            
+            // 좌우 흔들림
+            const swayAmount = (Math.random() - 0.5) * 80;
+            leaf.style.setProperty('--sway', swayAmount + 'px');
+            
+            // 시작 딜레이
+            const delay = Math.random() * 0.5;
+            leaf.style.animationDelay = delay + 's';
+            
+            canvas.appendChild(leaf);
+
+            // 애니메이션 끝나면 제거
+            setTimeout(() => {
+                leaf.remove();
+            }, (duration + delay) * 1000 + 100);
+        }
+
+        // 초기 상태 설정
+        document.getElementById('stopBtn').disabled = true;
+    </script>
+</body>
+</html>
